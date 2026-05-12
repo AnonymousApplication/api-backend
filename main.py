@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Annotated
 from sqlmodel import select
+from decouple import config
 
 from models import *
 from database import SessionDep, create_db_and_tables
@@ -10,6 +12,17 @@ app = FastAPI()
 @app.on_event('startup')
 def on_startup():
     create_db_and_tables()
+
+# CORS middleware
+ALLOWED_ORIGINS = config("ALLOWED_ORIGINS")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"]
+)
 
 
 #
