@@ -147,10 +147,8 @@ def test_create_task(session: Session, client: TestClient):
             "due": "2026-05-11 19:20:41"
         }
     )
-    data = response.json()
     
     assert response.status_code == 200
-    assert data["task_title"] == "A task title"
 
 
 def test_create_task_no_description(session: Session, client: TestClient):
@@ -167,10 +165,8 @@ def test_create_task_no_description(session: Session, client: TestClient):
             "due": "2026-05-11 19:20:41"
         }
     )
-    data = response.json()
     
     assert response.status_code == 200
-    assert data["task_title"] == "A task title"
 
 
 def test_get_task_by_id_invalid_id(session: Session, client: TestClient):
@@ -295,7 +291,7 @@ def test_update_task_status(session: Session, client: TestClient):
     data = response.json()
 
     assert response.status_code == 200
-    assert data["status_id"] == task_status_2.id
+    assert data["task"]["status_id"] == task_status_2.id
 
 
 def test_delete_task_invalid_id(session: Session, client: TestClient):
@@ -326,7 +322,5 @@ def test_delete_task(session: Session, client: TestClient):
     session.commit()
 
     response = client.delete(f"/tasks/{task.id}")
-    data = response.json()
 
     assert response.status_code == 200
-    assert "ok" in data

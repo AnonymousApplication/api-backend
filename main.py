@@ -87,14 +87,14 @@ def delete_status(status_id: int, session: SessionDep):
 # Create task (POST)
 #
 
-@app.post("/tasks/", response_model=TaskPublic)
+@app.post("/tasks/")
 def create_task(task: TaskBase, session: SessionDep):
 
     db_task = Task.model_validate(task)
     session.add(db_task)
     session.commit()
-    session.refresh(db_task)
-    return db_task
+
+    return {"status": 200}
 
 #
 # Get task by id (GET)
@@ -118,14 +118,14 @@ def get_all_tasks(
         offset: int = 0,
         limit: Annotated[int, Query(le=100)] = 100
 ):
-    tasks = session.exec(select(Task).offset(offset).limit(limit)).all()
+    tasks = session.exec(select(Task).offset(offset).limit(limit).order_by(Task.due)).all()
     return tasks
 
 #
 # Update task status (PATCH)
 #
 
-@app.patch("/tasks/{task_id}", response_model=TaskPublic)
+@app.patch("/tasks/{task_id}")
 def update_task_status(task_id: int, task: TaskUpdate, session: SessionDep):
 
     task_db = session.get(Task, task_id)
@@ -137,7 +137,8 @@ def update_task_status(task_id: int, task: TaskUpdate, session: SessionDep):
     session.add(task_db)
     session.commit()
     session.refresh(task_db)
-    return task_db
+
+    return {"task": task_db, "status": 200}
 
 #
 # Delete a task (DELETE)
@@ -151,4 +152,5 @@ def delete_task(task_id: int, session: SessionDep):
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
     session.delete(task)
     session.commit()
-    return {"ok", True}
+
+    return {"status": 200}
