@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Annotated
@@ -7,11 +8,28 @@ from decouple import config
 from models import *
 from database import SessionDep, create_db_and_tables
 
+# pagination
+from fastapi_pagination import add_pagination, paginate
+from fastapi_pagination.links import Page as BasePage
+from fastapi_pagination.customization import UseParamsFields, CustomizedPage
+from fastapi_pagination.utils import disable_installed_extensions_check
 
-app = FastAPI()
-@app.on_event('startup')
-def on_startup():
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     create_db_and_tables()
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+# Pagination
+PAGE_SIZE = config("PAGE_SIZE")
+Page = CustomizedPage[
+    BasePage,
+    UseParamsFields(
+        size=Query(PAGE_SIZE, ge=0),
+    ),
+]
 
 # CORS middleware
 ALLOWED_ORIGINS = config("ALLOWED_ORIGINS")
@@ -112,14 +130,10 @@ def get_task_by_id(task_id: int, session: SessionDep):
 # Get all tasks (GET)
 #
 
-@app.get("/", response_model=list[TaskPublic])
-def get_all_tasks(
-        session: SessionDep, 
-        offset: int = 0,
-        limit: Annotated[int, Query(le=100)] = 100
-):
-    tasks = session.exec(select(Task).offset(offset).limit(limit).order_by(Task.due)).all()
-    return tasks
+@app.get("/", response_model=Page[TaskPublic])
+def get_all_tasks(session: SessionDep):
+    tasks = session.exec(select(Task).order_by(Task.due)).all()
+    return paginate(tasks)
 
 #
 # Update task status (PATCH)
@@ -154,3 +168,7 @@ def delete_task(task_id: int, session: SessionDep):
     session.commit()
 
     return {"status": 200}
+
+
+# need to add pagination at the end
+add_pagination(app)

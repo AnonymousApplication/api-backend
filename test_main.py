@@ -1,4 +1,5 @@
 import pytest
+
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
@@ -224,12 +225,12 @@ def test_get_all_tasks(session: Session, client: TestClient):
     data = response.json()
 
     assert response.status_code == 200
-    assert data[0]["task_title"] == "A task title"
-    assert data[0]["status_id"] == task_status.id
-    assert data[0]["due"] == "2026-05-11T19:20:00"
-    assert data[1]["task_title"] == "A task title 2"
-    assert data[1]["status_id"] == task_status.id
-    assert data[1]["due"] == "2026-05-11T20:20:00"
+    assert data["items"][0]["task_title"] == "A task title"
+    assert data["items"][0]["status_id"] == task_status.id
+    assert data["items"][0]["due"] == "2026-05-11T19:20:00"
+    assert data["items"][1]["task_title"] == "A task title 2"
+    assert data["items"][1]["status_id"] == task_status.id
+    assert data["items"][1]["due"] == "2026-05-11T20:20:00"
 
 
 def test_update_task_status_invalid_id(session: Session, client: TestClient):
