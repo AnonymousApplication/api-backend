@@ -52,7 +52,7 @@ def test_create_status(client: TestClient):
     )
     data = response.json()
     
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert data["status_desc"] == "Active"
 
 
@@ -149,7 +149,7 @@ def test_create_task(session: Session, client: TestClient):
         }
     )
     
-    assert response.status_code == 200
+    assert response.status_code == 201
 
 
 def test_create_task_no_description(session: Session, client: TestClient):
@@ -167,7 +167,7 @@ def test_create_task_no_description(session: Session, client: TestClient):
         }
     )
     
-    assert response.status_code == 200
+    assert response.status_code == 201
 
 
 def test_get_task_by_id_invalid_id(session: Session, client: TestClient):
@@ -292,7 +292,7 @@ def test_update_task_status(session: Session, client: TestClient):
     data = response.json()
 
     assert response.status_code == 200
-    assert data["task"]["status_id"] == task_status_2.id
+    assert data["status_id"] == task_status_2.id
 
 
 def test_delete_task_invalid_id(session: Session, client: TestClient):

@@ -47,7 +47,7 @@ app.add_middleware(
 # Create status (POST)
 #
 
-@app.post("/statuses/", response_model=Task_StatusPublic)
+@app.post("/statuses/", response_model=Task_StatusPublic, status_code=201)
 def create_status(status: Task_StatusBase, session: SessionDep):
 
     db_status = Task_Status.model_validate(status)
@@ -60,7 +60,7 @@ def create_status(status: Task_StatusBase, session: SessionDep):
 # Get all statuses (GET)
 #
 
-@app.get("/statuses/", response_model=list[Task_StatusPublic])
+@app.get("/statuses/", response_model=list[Task_StatusPublic], status_code=200)
 def get_all_statuses(
         session: SessionDep, 
         offset: int = 0,
@@ -73,7 +73,7 @@ def get_all_statuses(
 # Update status (PATCH)
 #
 
-@app.patch("/statuses/{status_id}", response_model=Task_StatusPublic)
+@app.patch("/statuses/{status_id}", response_model=Task_StatusPublic, status_code=200)
 def update_status(status_id: int, status: Task_StatusBase, session: SessionDep):
 
     status_db = session.get(Task_Status, status_id)
@@ -91,7 +91,7 @@ def update_status(status_id: int, status: Task_StatusBase, session: SessionDep):
 # Delete status (DELETE)
 #
 
-@app.delete("/statuses/{status_id}")
+@app.delete("/statuses/{status_id}", status_code=200)
 def delete_status(status_id: int, session: SessionDep):
 
     task_status = session.get(Task_Status, status_id)
@@ -105,20 +105,21 @@ def delete_status(status_id: int, session: SessionDep):
 # Create task (POST)
 #
 
-@app.post("/tasks/")
+@app.post("/tasks/", response_model=TaskPublic, status_code=201)
 def create_task(task: TaskBase, session: SessionDep):
 
     db_task = Task.model_validate(task)
     session.add(db_task)
     session.commit()
+    session.refresh(db_task)
 
-    return {"status": 200}
+    return db_task
 
 #
 # Get task by id (GET)
 #
 
-@app.get("/tasks/{task_id}", response_model=TaskPublic)
+@app.get("/tasks/{task_id}", response_model=TaskPublic, status_code=200)
 def get_task_by_id(task_id: int, session: SessionDep):
 
     task = session.get(Task, task_id)
@@ -130,7 +131,7 @@ def get_task_by_id(task_id: int, session: SessionDep):
 # Get all tasks (GET)
 #
 
-@app.get("/", response_model=Page[TaskPublic])
+@app.get("/", response_model=Page[TaskPublic], status_code=200)
 def get_all_tasks(session: SessionDep):
     tasks = session.exec(select(Task).order_by(Task.due)).all()
     return paginate(tasks)
@@ -139,7 +140,7 @@ def get_all_tasks(session: SessionDep):
 # Update task status (PATCH)
 #
 
-@app.patch("/tasks/{task_id}")
+@app.patch("/tasks/{task_id}", response_model=TaskPublic, status_code=200)
 def update_task_status(task_id: int, task: TaskUpdate, session: SessionDep):
 
     task_db = session.get(Task, task_id)
@@ -152,13 +153,13 @@ def update_task_status(task_id: int, task: TaskUpdate, session: SessionDep):
     session.commit()
     session.refresh(task_db)
 
-    return {"task": task_db, "status": 200}
+    return task_db
 
 #
 # Delete a task (DELETE)
 #
 
-@app.delete("/tasks/{task_id}")
+@app.delete("/tasks/{task_id}", status_code=200)
 def delete_task(task_id: int, session: SessionDep):
 
     task = session.get(Task, task_id)
@@ -167,7 +168,7 @@ def delete_task(task_id: int, session: SessionDep):
     session.delete(task)
     session.commit()
 
-    return {"status": 200}
+    return {"ok": True}
 
 
 # need to add pagination at the end
